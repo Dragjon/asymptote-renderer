@@ -1,6 +1,5 @@
 FROM python:3.11-slim
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
     asymptote \
     texlive-latex-base \
@@ -12,13 +11,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install Python deps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app
 COPY . .
 
-EXPOSE 8080
-
-CMD ["python", "app.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:app"]

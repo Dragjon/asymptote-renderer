@@ -5,13 +5,17 @@ app = Flask(__name__)
 
 @app.route("/render", methods=["POST"])
 def render():
-    code = request.json["code"]
+    data = request.get_json(silent=True)
+    if not data or "code" not in data:
+        return "Invalid request", 400
+
+    code = data["code"]
 
     if len(code) > 50000:
         return "Too large", 400
 
-    id = str(uuid.uuid4())
-    path = f"/tmp/{id}"
+    job_id = str(uuid.uuid4())
+    path = f"/tmp/{job_id}"
     os.mkdir(path)
 
     try:
@@ -19,11 +23,14 @@ def render():
         with open(file_path, "w") as f:
             f.write(code)
 
-        subprocess.run(
+        result = subprocess.run(
             ["asy", "-f", "png", "input.asy"],
             cwd=path,
             timeout=3
         )
+
+        if result.returncode != 0:
+            return "Asymptote error", 400
 
         return send_file(f"{path}/input.png", mimetype="image/png")
 
@@ -32,5 +39,3 @@ def render():
 
     finally:
         shutil.rmtree(path, ignore_errors=True)
-
-app.run(host="0.0.0.0", port=8080)
