@@ -3,7 +3,14 @@ from flask_cors import CORS
 import subprocess, uuid, os, shutil, io
 
 app = Flask(__name__)
-CORS(app)
+
+# 🔥 STRONG CORS CONFIG (fixes preflight issues)
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    allow_headers=["Content-Type"],
+    methods=["GET", "POST", "OPTIONS"]
+)
 
 PRELUDE = """
 import graph;
@@ -20,7 +27,24 @@ def error_response(error_type, message, status=400, extra=None):
     }
     if extra:
         payload.update(extra)
-    return jsonify(payload), status
+
+    response = jsonify(payload)
+    response.status_code = status
+
+    # 🔥 ENSURE CORS EVEN ON ERRORS
+    response.headers["Access-Control-Allow-Origin"] = "*"
+
+    return response
+
+
+# 🔥 EXPLICIT PRE-FLIGHT SUPPORT (important for Render)
+@app.route("/render", methods=["OPTIONS"])
+def render_options():
+    response = jsonify({"status": "ok"})
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    return response
 
 
 @app.route("/render", methods=["POST"])
@@ -42,7 +66,7 @@ def render():
             extra={"limit": 50000, "received": len(code)}
         )
 
-    # 🔥 INJECT PRELUDE HERE
+    # 🔥 inject safe runtime
     code = PRELUDE + "\n" + code
 
     job_id = str(uuid.uuid4())
@@ -89,7 +113,12 @@ def render():
         with open(img_path, "rb") as img_file:
             img_data = io.BytesIO(img_file.read())
 
-        return send_file(img_data, mimetype="image/png")
+        response = send_file(img_data, mimetype="image/png")
+
+        # 🔥 CORS on success too
+        response.headers["Access-Control-Allow-Origin"] = "*"
+
+        return response
 
     except subprocess.TimeoutExpired:
         return error_response(
