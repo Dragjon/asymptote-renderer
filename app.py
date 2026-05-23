@@ -29,7 +29,7 @@ def render():
             f.write(code)
 
         result = subprocess.run(
-            ["asy", "-f", "png", "input.asy"],
+            ["asy", "-f", "png", "-render=4", "input.asy"],
             cwd=path,
             timeout=3
         )
