@@ -31,11 +31,21 @@ def render():
         result = subprocess.run(
             ["asy", "-f", "png", "-render=4", "input.asy"],
             cwd=path,
-            timeout=3
+            timeout=3,
+            capture_output=True,
+            text=True
         )
 
+        print("STDOUT:", result.stdout)
+        print("STDERR:", result.stderr)
+        print("RETURN CODE:", result.returncode)
+
         if result.returncode != 0:
-            return "Asymptote error", 400
+            return {
+                "error": "Asymptote error",
+                "stdout": result.stdout,
+                "stderr": result.stderr
+            }, 400
 
         # FIX: Read file completely into memory before the finally cleanup runs
         with open(f"{path}/input.png", "rb") as img_file:
