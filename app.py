@@ -1,6 +1,6 @@
 from flask import Flask, request, send_file
 from flask_cors import CORS
-import subprocess, uuid, os, shutil
+import subprocess, uuid, os, shutil, io
 
 app = Flask(__name__)
 CORS(app)
@@ -20,6 +20,9 @@ def render():
     path = f"/tmp/{job_id}"
     os.mkdir(path)
 
+    # Initialize container out of try scope
+    img_data = None
+
     try:
         file_path = f"{path}/input.asy"
         with open(file_path, "w") as f:
@@ -34,10 +37,16 @@ def render():
         if result.returncode != 0:
             return "Asymptote error", 400
 
-        return send_file(f"{path}/input.png", mimetype="image/png")
+        # FIX: Read file completely into memory before the finally cleanup runs
+        with open(f"{path}/input.png", "rb") as img_file:
+            img_data = io.BytesIO(img_file.read())
 
     except subprocess.TimeoutExpired:
         return "Timeout", 400
-
+    except FileNotFoundError:
+        return "Compiled image file missing", 500
     finally:
         shutil.rmtree(path, ignore_errors=True)
+
+    # Stream out of the memory buffer instead of the disk file
+    return send_file(img_data, mimetype="image/png")
