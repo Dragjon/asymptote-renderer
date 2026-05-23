@@ -32,3 +32,5 @@ def render():
 
     finally:
         shutil.rmtree(path, ignore_errors=True)
+
+app.run(host="0.0.0.0", port=8080)
