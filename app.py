@@ -5,6 +5,13 @@ import subprocess, uuid, os, shutil, io
 app = Flask(__name__)
 CORS(app)
 
+PRELUDE = """
+import graph;
+import geometry;
+
+pair origin = (0,0);
+"""
+
 def error_response(error_type, message, status=400, extra=None):
     payload = {
         "status": "error",
@@ -34,6 +41,9 @@ def render():
             "Asymptote code exceeds 50,000 characters",
             extra={"limit": 50000, "received": len(code)}
         )
+
+    # 🔥 INJECT PRELUDE HERE
+    code = PRELUDE + "\n" + code
 
     job_id = str(uuid.uuid4())
     path = f"/tmp/{job_id}"
