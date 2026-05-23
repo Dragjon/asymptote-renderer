@@ -81,7 +81,7 @@ def render():
         result = subprocess.run(
             ["asy", "-f", "png", "-render=4", "input.asy"],
             cwd=path,
-            timeout=3,
+            timeout=10,
             capture_output=True,
             text=True
         )
@@ -124,7 +124,7 @@ def render():
         return error_response(
             "timeout",
             "Asymptote rendering exceeded time limit",
-            extra={"limit_seconds": 3}
+            extra={"limit_seconds": 10}
         )
 
     except Exception as e:
