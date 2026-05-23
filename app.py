@@ -1,7 +1,9 @@
 from flask import Flask, request, send_file
+from flask_cors import CORS
 import subprocess, uuid, os, shutil
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/render", methods=["POST"])
 def render():
