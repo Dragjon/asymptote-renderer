@@ -12,11 +12,89 @@ CORS(
     methods=["GET", "POST", "OPTIONS"]
 )
 
-PRELUDE = """
+PRELUDE = r"""
+// ---------- Common settings ----------
+settings.outformat = "png";
+defaultpen(linewidth(0.8));
+
+// ---------- Standard imports ----------
 import graph;
 import geometry;
+import olympiad;
+import math;
+import fontsize;
+import patterns;
+import markers;
+import palette;
+import three;
+import solids;
+import contour;
 
+// ---------- Common aliases ----------
+pair O = (0,0);
 pair origin = (0,0);
+
+// ---------- Common constants ----------
+real pi = 3.14159265358979323846;
+
+// ---------- Utility helper functions ----------
+
+// Distance squared
+real norm2(pair P) {
+    return P.x^2 + P.y^2;
+}
+
+// Midpoint fallback
+pair midpoint(pair A, pair B) {
+    return (A + B)/2;
+}
+
+// Foot of perpendicular fallback
+pair foot(pair P, pair A, pair B) {
+    return projection(A,B)*P;
+}
+
+// Reflection of P across line AB
+pair reflectline(pair P, pair A, pair B) {
+    pair F = foot(P,A,B);
+    return 2F - P;
+}
+
+// Rotate point P around C by angle degrees
+pair rotatearound(pair P, pair C, real angle) {
+    return rotate(angle, C)*P;
+}
+
+// Unit direction vector from angle in degrees
+pair dirdeg(real angle) {
+    return dir(angle);
+}
+
+// ---------- Common drawing helpers ----------
+
+// Safer dot labeling
+void dotlabel(string s, pair P, pair dir=NE) {
+    dot(P);
+    label(s, P, dir);
+}
+
+// Safer draw polygon
+void drawpoly(pair[] pts, pen p=currentpen) {
+    for(int i=0; i<pts.length; ++i) {
+        draw(pts[i]--pts[(i+1)%pts.length], p);
+    }
+}
+
+// ---------- Frequently used colors ----------
+pen invisible = opacity(0);
+
+// ---------- Compatibility aliases ----------
+pair footpoint(pair P, pair A, pair B) {
+    return foot(P,A,B);
+}
+
+// ---------- Default size ----------
+size(250);
 """
 
 def error_response(error_type, message, status=400, extra=None):
